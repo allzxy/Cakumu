@@ -3,18 +3,18 @@ import type { Category, Transaction, Wallet } from '../lib/types';
 import { CURRENCIES, BASE_CURRENCY_CODE, convertAmount } from '../lib/currencies';
 import { DEFAULT_CATEGORIES, DEFAULT_TRANSACTIONS, DEFAULT_WALLETS } from '../lib/seed';
 import { useLiveRates, type LiveRatesState } from '../lib/useLiveRates';
+import { useLanguage } from './LanguageContext';
 
 interface FinanceState {
   wallets: Wallet[];
   categories: Category[];
   transactions: Transaction[];
   currencyCode: string;
-  selectedMonth: string; // YYYY-MM
+  selectedMonth: string;
 }
 
 interface FinanceContextValue extends FinanceState {
   currency: typeof CURRENCIES[number];
-  /** Converts an amount stored internally (base currency) into the selected display currency. */
   toDisplay: (amount: number) => number;
   setCurrencyCode: (code: string) => void;
   setSelectedMonth: (month: string) => void;
@@ -25,24 +25,14 @@ interface FinanceContextValue extends FinanceState {
   addWallet: (w: Omit<Wallet, 'id'>) => void;
   updateWallet: (id: string, patch: Partial<Wallet>) => void;
   deleteWallet: (id: string) => void;
-  /** Adds funds to a wallet from an external source (e.g. cash top-up), recorded as an income transaction. */
   topUpWallet: (walletId: string, amount: number, date: string, note?: string) => void;
-  /** Moves funds from one real wallet to another (mis. Cash ke Rekening), recorded as two linked transactions. */
   transferBetweenWallets: (fromWalletId: string, toWalletId: string, amount: number, date: string, note?: string) => void;
-  /**
-   * Menambah tabungan: uang disimpan di dompet nyata (cash/bank/digital) yang dipilih, jadi saldo
-   * dompet nyata itu BERTAMBAH (uang memang masuk ke sana), dan progres target tabungan juga ikut
-   * bertambah. Tidak ada dompet lain yang dikurangi — sesuai kondisi nyata bahwa uang tabungan
-   * memang tersimpan di salah satu dompet nyata tersebut.
-   */
   addToSavings: (savingsWalletId: string, targetWalletId: string, amount: number, date: string, note?: string) => void;
   addCategory: (c: Omit<Category, 'id'>) => void;
   updateCategory: (id: string, patch: Partial<Omit<Category, 'id' | 'type'>>) => void;
   deleteCategory: (id: string) => void;
   availableMonths: string[];
-  /** Converts an amount typed in the current display currency back into the internal base currency. */
   fromDisplay: (amount: number) => number;
-  /** Real-world exchange rate state (live, refreshed hourly, with offline fallback). */
   liveRates: LiveRatesState;
 }
 
@@ -62,9 +52,7 @@ function loadInitial(): FinanceState {
           selectedMonth: parsed.selectedMonth ?? currentMonthKey(),
         };
       }
-    } catch {
-      // fall through to defaults
-    }
+    } catch {}
   }
   return {
     wallets: DEFAULT_WALLETS,
@@ -88,6 +76,7 @@ const FinanceContext = createContext<FinanceContextValue | null>(null);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<FinanceState>(loadInitial);
+  const { t } = useLanguage();
 
   useEffect(() => {
     try {
@@ -101,9 +90,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           selectedMonth: state.selectedMonth,
         })
       );
-    } catch {
-      // ignore quota errors
-    }
+    } catch {}
   }, [state.wallets, state.categories, state.transactions, state.currencyCode, state.selectedMonth]);
 
   const liveRates = useLiveRates();
@@ -128,9 +115,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, selectedMonth: month }));
   }, []);
 
-  const addTransaction = useCallback((t: Omit<Transaction, 'id'>) => {
+  const addTransaction = useCallback((tTx: Omit<Transaction, 'id'>) => {
     setState((s) => {
-      const tx: Transaction = { ...t, id: uid('t') };
+      const tx: Transaction = { ...tTx, id: uid('t') };
       const wallets = s.wallets.map((w) =>
         w.id === tx.walletId
           ? { ...w, balance: w.balance + (tx.type === 'income' ? tx.amount : -tx.amount) }
@@ -142,7 +129,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const updateTransaction = useCallback((id: string, patch: Omit<Transaction, 'id'>) => {
     setState((s) => {
-      const old = s.transactions.find((t) => t.id === id);
+      const old = s.transactions.find((tr) => tr.id === id);
       if (!old) return s;
 
       let wallets = s.wallets.map((w) =>
@@ -156,21 +143,21 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           : w
       );
 
-      const transactions = s.transactions.map((t) => (t.id === id ? { ...patch, id } : t));
+      const transactions = s.transactions.map((tr) => (tr.id === id ? { ...patch, id } : tr));
       return { ...s, transactions, wallets };
     });
   }, []);
 
   const deleteTransaction = useCallback((id: string) => {
     setState((s) => {
-      const tx = s.transactions.find((t) => t.id === id);
+      const tx = s.transactions.find((tr) => tr.id === id);
       if (!tx) return s;
       const wallets = s.wallets.map((w) =>
         w.id === tx.walletId
           ? { ...w, balance: w.balance - (tx.type === 'income' ? tx.amount : -tx.amount) }
           : w
       );
-      return { ...s, transactions: s.transactions.filter((t) => t.id !== id), wallets };
+      return { ...s, transactions: s.transactions.filter((tr) => tr.id !== id), wallets };
     });
   }, []);
 
@@ -178,8 +165,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setState((s) => {
       const wallets = s.wallets.map((w) => {
         const delta = s.transactions
-          .filter((t) => t.walletId === w.id)
-          .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+          .filter((tr) => tr.walletId === w.id)
+          .reduce((sum, tr) => sum + (tr.type === 'income' ? tr.amount : -tr.amount), 0);
         return { ...w, balance: w.balance - delta };
       });
       return { ...s, transactions: [], wallets };
@@ -205,7 +192,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       const tx: Transaction = {
         id: uid('t'),
         date,
-        description: note?.trim() || 'Isi saldo',
+        description: note?.trim() || t('tx.defaultTopup'),
         categoryId: topupCategory,
         walletId,
         type: 'income',
@@ -214,7 +201,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       const wallets = s.wallets.map((w) => (w.id === walletId ? { ...w, balance: w.balance + amount } : w));
       return { ...s, transactions: [tx, ...s.transactions], wallets };
     });
-  }, []);
+  }, [t]);
 
   const transferBetweenWallets = useCallback(
     (fromWalletId: string, toWalletId: string, amount: number, date: string, note?: string) => {
@@ -226,8 +213,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
         const outCategory = s.categories.find((c) => c.id === 'c-topup-out')?.id ?? s.categories.find((c) => c.type === 'expense')?.id ?? '';
         const inCategory = s.categories.find((c) => c.id === 'c-topup-in')?.id ?? s.categories.find((c) => c.type === 'income')?.id ?? '';
-        const label = note?.trim() || `Transfer ke ${toWallet.name}`;
-        const labelIn = note?.trim() || `Transfer dari ${fromWallet.name}`;
+        const label = note?.trim() || t('tx.defaultTransferOut', { name: toWallet.name });
+        const labelIn = note?.trim() || t('tx.defaultTransferIn', { name: fromWallet.name });
 
         const outTx: Transaction = {
           id: uid('t'),
@@ -257,7 +244,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         return { ...s, transactions: [inTx, outTx, ...s.transactions], wallets };
       });
     },
-    []
+    [t]
   );
 
   const addToSavings = useCallback(
@@ -272,17 +259,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         const tx: Transaction = {
           id: uid('t'),
           date,
-          description: note?.trim() || `Nabung untuk ${savingsWallet.name} (disimpan di ${targetWallet.name})`,
+          description: note?.trim() || t('tx.defaultSavings', { name: savingsWallet.name, target: targetWallet.name }),
           categoryId: category,
           walletId: targetWalletId,
           type: 'income',
           amount,
         };
 
-        // Uangnya benar-benar disimpan di dompet nyata yang dipilih, jadi HANYA saldo dompet nyata
-        // itu yang bertambah. Progres tabungan (balance milik dompet 'savings') ikut naik supaya
-        // terlihat mendekati target, tapi jumlah ini TIDAK dihitung lagi di "Total semua dompet"
-        // karena uangnya sudah tercatat di dompet nyata tersebut (lihat perhitungan total saldo).
         const wallets = s.wallets.map((w) => {
           if (w.id === savingsWalletId) return { ...w, balance: w.balance + amount, linkedWalletId: targetWalletId };
           if (w.id === targetWalletId) return { ...w, balance: w.balance + amount };
@@ -292,7 +275,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         return { ...s, transactions: [tx, ...s.transactions], wallets };
       });
     },
-    []
+    [t]
   );
 
   const addCategory = useCallback((c: Omit<Category, 'id'>) => {
@@ -313,8 +296,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       return {
         ...s,
         categories: s.categories.filter((c) => c.id !== id),
-        transactions: s.transactions.map((t) =>
-          t.categoryId === id ? { ...t, categoryId: fallback.id } : t
+        transactions: s.transactions.map((tr) =>
+          tr.categoryId === id ? { ...tr, categoryId: fallback.id } : tr
         ),
       };
     });
@@ -322,7 +305,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const availableMonths = useMemo(() => {
     const set = new Set<string>();
-    state.transactions.forEach((t) => set.add(t.date.slice(0, 7)));
+    state.transactions.forEach((tr) => set.add(tr.date.slice(0, 7)));
     set.add(currentMonthKey());
     return Array.from(set).sort().reverse();
   }, [state.transactions]);
