@@ -1,19 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sun, Moon, Monitor, Check } from 'lucide-react';
 import { useTheme, type ThemeMode } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
+
+const OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
+  { value: 'light', label: 'Terang', icon: Sun },
+  { value: 'dark', label: 'Gelap', icon: Moon },
+  { value: 'system', label: 'Ikuti Perangkat', icon: Monitor },
+];
 
 export default function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme();
-  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  const OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-    { value: 'light', label: t('theme.light'), icon: Sun },
-    { value: 'dark', label: t('theme.dark'), icon: Moon },
-    { value: 'system', label: t('theme.system'), icon: Monitor },
-  ];
 
   useEffect(() => {
     if (!open) return;
@@ -37,7 +35,7 @@ export default function ThemeToggle() {
     <div ref={rootRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={t('common.edit')}
+        aria-label="Ubah tema"
         aria-expanded={open}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink-soft)] transition hover:border-[var(--color-primary)]/40 hover:text-[var(--color-primary)]"
       >
@@ -46,7 +44,7 @@ export default function ThemeToggle() {
 
       {open && (
         <div className="animate-rise absolute right-0 top-12 z-50 w-48 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-1.5 shadow-[var(--shadow-flat)]">
-          <p className="px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">{t('theme.appearance')}</p>
+          <p className="px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">Tampilan</p>
           {OPTIONS.map((opt) => (
             <button
               key={opt.value}

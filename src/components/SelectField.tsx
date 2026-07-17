@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Modal from './Modal';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface SelectOption {
   value: string;
   label: string;
   sublabel?: string;
   icon?: LucideIcon;
-  /** Short text badge (e.g. currency symbol) shown when no icon is provided. */
   badge?: string;
   color?: string;
 }
@@ -21,9 +21,7 @@ interface Props {
   placeholder?: string;
   modalTitle: string;
   disabled?: boolean;
-  /** Compact trigger style used for tight layouts (e.g. currency swap row). */
   compact?: boolean;
-  /** Set true when this field lives inside another modal, so its picker stacks above it. */
   nested?: boolean;
 }
 
@@ -32,15 +30,17 @@ export default function SelectField({
   value,
   options,
   onChange,
-  placeholder = 'Pilih',
+  placeholder,
   modalTitle,
   disabled = false,
   compact = false,
   nested = false,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
   const selected = options.find((o) => o.value === value);
   const SelectedIcon = selected?.icon;
+  const finalPlaceholder = placeholder || t('select.placeholder');
 
   return (
     <div className="min-w-0">
@@ -65,14 +65,14 @@ export default function SelectField({
             {selected.badge}
           </span>
         ) : null}
-        <span className="min-w-0 flex-1 truncate">{selected ? selected.label : placeholder}</span>
+        <span className="min-w-0 flex-1 truncate">{selected ? selected.label : finalPlaceholder}</span>
         <ChevronDown size={15} className="shrink-0 text-[var(--color-muted)]" />
       </button>
 
       <Modal open={open} onClose={() => setOpen(false)} title={modalTitle} nested={nested}>
         <div className="flex flex-col gap-1">
           {options.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[var(--color-muted)]">Tidak ada pilihan.</p>
+            <p className="py-6 text-center text-sm text-[var(--color-muted)]">{t('select.empty')}</p>
           ) : (
             options.map((opt) => {
               const OptIcon = opt.icon;

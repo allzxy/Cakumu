@@ -1,5 +1,6 @@
 import Modal from './Modal';
 import { AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface Props {
   open: boolean;
@@ -11,7 +12,10 @@ interface Props {
   nested?: boolean;
 }
 
-export default function ConfirmModal({ open, onClose, onConfirm, title, description, confirmLabel = 'Hapus', nested = false }: Props) {
+export default function ConfirmModal({ open, onClose, onConfirm, title, description, confirmLabel, nested = false }: Props) {
+  const { t } = useLanguage();
+  const finalConfirmLabel = confirmLabel || t('common.delete');
+
   return (
     <Modal open={open} onClose={onClose} title={title} nested={nested}>
       <div className="flex flex-col gap-4">
@@ -26,7 +30,7 @@ export default function ConfirmModal({ open, onClose, onConfirm, title, descript
             onClick={onClose}
             className="flex-1 rounded-xl bg-[var(--color-surface-alt)] py-2.5 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[var(--color-border)]"
           >
-            Batal
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -36,7 +40,7 @@ export default function ConfirmModal({ open, onClose, onConfirm, title, descript
             }}
             className="flex-1 rounded-xl bg-[var(--color-warn)] py-2.5 text-sm font-semibold text-[var(--color-warn-contrast)] shadow-[var(--shadow-flat)] transition hover:opacity-90"
           >
-            {confirmLabel}
+            {finalConfirmLabel}
           </button>
         </div>
       </div>
