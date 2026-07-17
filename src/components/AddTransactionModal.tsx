@@ -3,18 +3,19 @@ import Modal from './Modal';
 import DateField from './DateField';
 import SelectField from './SelectField';
 import { useFinance } from '../context/FinanceContext';
+import { useLanguage } from '../context/LanguageContext';
 import { CATEGORY_ICONS, WALLET_ICONS } from '../lib/icons';
 import type { Transaction, TransactionType } from '../lib/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** When provided, the modal edits this existing transaction instead of creating a new one. */
   editing?: Transaction | null;
 }
 
 export default function AddTransactionModal({ open, onClose, editing }: Props) {
   const { categories, wallets, currency, addTransaction, updateTransaction, fromDisplay, toDisplay } = useFinance();
+  const { t } = useLanguage();
   const [type, setType] = useState<TransactionType>('expense');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -42,7 +43,6 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
       setWalletId(wallets[0]?.id ?? '');
       setDate(new Date().toISOString().slice(0, 10));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing]);
 
   const reset = () => {
@@ -81,43 +81,43 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={isEditing ? 'Ubah Transaksi' : 'Tambah Transaksi'}>
+    <Modal open={open} onClose={onClose} title={isEditing ? t('addTx.titleEdit') : t('addTx.titleAdd')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface-alt)] p-1 text-sm font-medium">
-          {(['expense', 'income'] as const).map((t) => (
+          {(['expense', 'income'] as const).map((txType) => (
             <button
-              key={t}
+              key={txType}
               type="button"
               onClick={() => {
-                setType(t);
+                setType(txType);
                 setCategoryId('');
               }}
               className={`flex-1 rounded-full py-2 transition ${
-                type === t
-                  ? t === 'income'
+                type === txType
+                  ? txType === 'income'
                     ? 'bg-[var(--color-primary)] text-[var(--color-primary-contrast)] shadow-sm'
                     : 'bg-[var(--color-warn)] text-[var(--color-warn-contrast)] shadow-sm'
                   : 'text-[var(--color-ink-soft)]'
               }`}
             >
-              {t === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+              {txType === 'income' ? t('addTx.income') : t('addTx.expense')}
             </button>
           ))}
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Deskripsi</label>
+          <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('addTx.description')}</label>
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="cth. Belanja bulanan"
+            placeholder={t('addTx.descriptionPlaceholder')}
             required
             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Jumlah ({currency.symbol})</label>
+          <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('addTx.amount')} ({currency.symbol})</label>
           <input
             type="number"
             min="0"
@@ -133,8 +133,8 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
         <DateField value={date} onChange={setDate} />
 
         <SelectField
-          label="Kategori"
-          modalTitle="Pilih Kategori"
+          label={t('addTx.category')}
+          modalTitle={t('addTx.category')}
           value={categoryId || filteredCategories[0]?.id || ''}
           onChange={setCategoryId}
           options={filteredCategories.map((c) => ({
@@ -146,8 +146,8 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
         />
 
         <SelectField
-          label="Dompet"
-          modalTitle="Pilih Dompet"
+          label={t('addTx.wallet')}
+          modalTitle={t('addTx.wallet')}
           value={walletId}
           onChange={setWalletId}
           options={wallets.map((w) => ({
@@ -162,7 +162,7 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
           type="submit"
           className="mt-2 rounded-xl bg-[var(--color-primary)] py-3 text-sm font-semibold text-[var(--color-primary-contrast)] shadow-[var(--shadow-flat)] transition hover:bg-[var(--color-primary-strong)]"
         >
-          {isEditing ? 'Simpan Perubahan' : 'Simpan Transaksi'}
+          {isEditing ? t('common.saveChanges') : t('addTx.save')}
         </button>
       </form>
     </Modal>

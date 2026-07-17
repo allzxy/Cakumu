@@ -52,7 +52,7 @@ export default function AboutModal({ open, onClose }: { open: boolean; onClose: 
             <Heart size={13} className="text-[var(--color-warn)]" /> {t('about.madeByTitle')}
           </p>
           <p className="text-xs leading-relaxed text-[var(--color-ink-soft)]">
-            <span className="font-semibold text-[var(--color-ink)]">Cakumu Studio</span> — {t('about.madeByDesc')}
+            <span className="font-semibold text-[var(--color-ink)]">All/Alfan</span> — {t('about.madeByDesc')}
           </p>
         </div>
 

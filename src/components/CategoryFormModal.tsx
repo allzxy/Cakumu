@@ -1,25 +1,22 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { useFinance } from '../context/FinanceContext';
+import { useLanguage } from '../context/LanguageContext';
 import { CATEGORY_ICONS, CATEGORY_ICON_OPTIONS } from '../lib/icons';
 import type { Category, TransactionType } from '../lib/types';
 
-const COLOR_PALETTE = [
-  '#1f7a5c', '#3c6ea5', '#c9a84c', '#8a5fc9', '#c1704a', '#4d8fa6',
-  '#b5523e', '#6a7a4f', '#c1465f', '#d1834f', '#5f8a6a', '#7a5fc1',
-];
+const COLOR_PALETTE = ['#1f7a5c', '#3c6ea5', '#c9a84c', '#8a5fc9', '#c1704a', '#4d8fa6', '#b5523e', '#6a7a4f', '#c1465f', '#d1834f', '#5f8a6a', '#7a5fc1'];
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Category being edited, or null when creating a new one. */
   editing?: Category | null;
-  /** Preselected type when creating a new category (ignored when editing). */
   defaultType?: TransactionType;
 }
 
 export default function CategoryFormModal({ open, onClose, editing, defaultType = 'expense' }: Props) {
   const { addCategory, updateCategory, currency, fromDisplay, toDisplay } = useFinance();
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [type, setType] = useState<TransactionType>(defaultType);
   const [icon, setIcon] = useState(CATEGORY_ICON_OPTIONS[0]);
@@ -42,7 +39,6 @@ export default function CategoryFormModal({ open, onClose, editing, defaultType 
       setColor(COLOR_PALETTE[0]);
       setLimit('');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, defaultType]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,42 +56,42 @@ export default function CategoryFormModal({ open, onClose, editing, defaultType 
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={isEditing ? 'Ubah Kategori' : 'Kategori Baru'} nested>
+    <Modal open={open} onClose={onClose} title={isEditing ? t('categories.edit') : t('categories.new')} nested>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {!isEditing && (
           <div className="flex rounded-full border border-[var(--color-border)] bg-[var(--color-surface-alt)] p-1 text-sm font-medium">
-            {(['expense', 'income'] as const).map((t) => (
+            {(['expense', 'income'] as const).map((txType) => (
               <button
-                key={t}
+                key={txType}
                 type="button"
-                onClick={() => setType(t)}
+                onClick={() => setType(txType)}
                 className={`flex-1 rounded-full py-2 transition ${
-                  type === t
-                    ? t === 'income'
+                  type === txType
+                    ? txType === 'income'
                       ? 'bg-[var(--color-primary)] text-[var(--color-primary-contrast)] shadow-sm'
                       : 'bg-[var(--color-warn)] text-[var(--color-warn-contrast)] shadow-sm'
                     : 'text-[var(--color-ink-soft)]'
                 }`}
               >
-                {t === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+                {txType === 'income' ? t('categories.income') : t('categories.expense')}
               </button>
             ))}
           </div>
         )}
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">Nama kategori</label>
+          <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('categories.name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="cth. Hiburan"
+            placeholder={t('categories.namePlaceholder')}
             required
             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]"
           />
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-[var(--color-muted)]">Ikon</label>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--color-muted)]">{t('categories.icon')}</label>
           <div className="grid grid-cols-6 gap-2">
             {CATEGORY_ICON_OPTIONS.map((iconKey) => {
               const IconComp = CATEGORY_ICONS[iconKey];
@@ -106,9 +102,7 @@ export default function CategoryFormModal({ open, onClose, editing, defaultType 
                   type="button"
                   onClick={() => setIcon(iconKey)}
                   className={`flex h-10 w-10 items-center justify-center rounded-xl border transition ${
-                    isSelected
-                      ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]'
-                      : 'border-[var(--color-border)] text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-alt)]'
+                    isSelected ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]' : 'border-[var(--color-border)] text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-alt)]'
                   }`}
                   aria-label={iconKey}
                 >
@@ -120,7 +114,7 @@ export default function CategoryFormModal({ open, onClose, editing, defaultType 
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-[var(--color-muted)]">Warna</label>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--color-muted)]">{t('categories.color')}</label>
           <div className="flex flex-wrap gap-2">
             {COLOR_PALETTE.map((c) => (
               <button
@@ -128,11 +122,7 @@ export default function CategoryFormModal({ open, onClose, editing, defaultType 
                 type="button"
                 onClick={() => setColor(c)}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition"
-                style={{
-                  backgroundColor: c,
-                  outline: color === c ? `2px solid ${c}` : 'none',
-                  outlineOffset: 2,
-                }}
+                style={{ backgroundColor: c, outline: color === c ? `2px solid ${c}` : 'none', outlineOffset: 2 }}
                 aria-label={c}
               >
                 {color === c && <span className="h-2 w-2 rounded-full bg-white" />}
@@ -143,16 +133,14 @@ export default function CategoryFormModal({ open, onClose, editing, defaultType 
 
         {type === 'expense' && (
           <div>
-            <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">
-              Batas bulanan opsional ({currency.symbol})
-            </label>
+            <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('categories.monthlyLimit')} ({currency.symbol})</label>
             <input
               type="number"
               min="0"
               step="0.01"
               value={limit}
               onChange={(e) => setLimit(e.target.value)}
-              placeholder="Kosongkan jika tidak ada batas"
+              placeholder={t('categories.monthlyLimitPlaceholder')}
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]"
             />
           </div>
@@ -162,7 +150,7 @@ export default function CategoryFormModal({ open, onClose, editing, defaultType 
           type="submit"
           className="mt-1 rounded-xl bg-[var(--color-primary)] py-3 text-sm font-semibold text-[var(--color-primary-contrast)] shadow-[var(--shadow-flat)] transition hover:bg-[var(--color-primary-strong)]"
         >
-          {isEditing ? 'Simpan Perubahan' : 'Buat Kategori'}
+          {isEditing ? t('common.saveChanges') : t('categories.create')}
         </button>
       </form>
     </Modal>
