@@ -1,0 +1,74 @@
+import { useState } from 'react';
+import { useFinance } from '../context/FinanceContext';
+import WalletCard from '../components/WalletCard';
+import WalletFormModal from '../components/WalletFormModal';
+import WalletFundModal from '../components/WalletFundModal';
+import ConfirmModal from '../components/ConfirmModal';
+import Topbar from '../components/Topbar';
+import { formatMoney } from '../lib/currencies';
+import { Plus } from 'lucide-react';
+import type { Wallet } from '../lib/types';
+
+export default function Wallets() {
+  const { wallets, currency, deleteWallet, toDisplay } = useFinance();
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Wallet | null>(null);
+  const [funding, setFunding] = useState<Wallet | null>(null);
+  const [deleting, setDeleting] = useState<Wallet | null>(null);
+
+  // Dompet 'savings' hanya progres target — uangnya sudah tercatat di dompet nyata (cash/bank/
+  // digital) yang menyimpannya, jadi tidak dijumlahkan lagi di sini agar tidak dobel hitung.
+  const totalBalance = toDisplay(wallets.filter((w) => w.type !== 'savings').reduce((s, w) => s + w.balance, 0));
+
+  const openCreate = () => {
+    setEditing(null);
+    setFormOpen(true);
+  };
+
+  const openEdit = (w: Wallet) => {
+    setEditing(w);
+    setFormOpen(true);
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Topbar
+        title="Dompet"
+        subtitle="Tunai, rekening, target, dan saldo — semua di satu tempat."
+      />
+
+      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-flat)] sm:flex-row sm:items-center sm:p-5">
+        <div className="min-w-0">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">Total semua dompet</p>
+          <p className="font-bold tracking-tight mt-1 truncate text-2xl text-[var(--color-ink)] sm:text-3xl">{formatMoney(totalBalance, currency)}</p>
+          <p className="mt-0.5 text-[11px] text-[var(--color-muted)]">dalam {currency.label}</p>
+        </div>
+        <button
+          onClick={openCreate}
+          className="flex items-center justify-center gap-1.5 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--color-primary-contrast)] shadow-[var(--shadow-flat)] transition hover:bg-[var(--color-primary-strong)]"
+        >
+          <Plus size={15} /> Dompet Baru
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+        {wallets.map((w) => (
+          <WalletCard key={w.id} wallet={w} wallets={wallets} onDelete={() => setDeleting(w)} onEdit={openEdit} onFund={setFunding} />
+        ))}
+      </div>
+
+      <WalletFormModal open={formOpen} onClose={() => setFormOpen(false)} editing={editing} />
+
+      <WalletFundModal open={!!funding} onClose={() => setFunding(null)} wallet={funding} />
+
+      <ConfirmModal
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        onConfirm={() => deleting && deleteWallet(deleting.id)}
+        title="Hapus Dompet"
+        description={`Dompet "${deleting?.name ?? ''}" akan dihapus. Riwayat transaksi yang terhubung tidak akan otomatis terhapus.`}
+        confirmLabel="Hapus"
+      />
+    </div>
+  );
+}
