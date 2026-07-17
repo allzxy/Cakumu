@@ -89,8 +89,8 @@ export default function TransactionList({ transactions, preview = false }: Props
       {sorted.length === 0 ? (
         <p className="py-10 text-center text-sm text-[var(--color-muted)]">{isFiltered ? t('tx.emptyFiltered') : t('tx.empty')}</p>
       ) : (
-        /* SOLUSI BUG: Menambahkan padding bottom (pb-24) dinamis jika menuOpenId aktif agar dropdown menu punya ruang di dalam kontainer */
-        <div className={`flex max-h-[420px] flex-col gap-1 overflow-y-auto pr-1 transition-all ${menuOpenId ? 'pb-24' : ''}`}>
+        /* PERBAIKAN BUG: max-h dan overflow-y-auto dihapus agar menu bisa melayang bebas tanpa terpotong batas kontainer */
+        <div className="flex flex-col gap-1">
           {sorted.map((tx) => {
             const cat = categories.find((c) => c.id === tx.categoryId);
             const Icon = cat?.icon ? CATEGORY_ICONS[cat.icon] : undefined;
