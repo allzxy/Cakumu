@@ -5,7 +5,6 @@ export const LANGUAGE_LABELS: Record<Language, { label: string; native: string; 
   en: { label: 'English', native: 'English', locale: 'en-US' },
 };
 
-// Dictionary keyed by dot-path. Keeping it flat-ish per domain for readability.
 const DICT = {
   id: {
     'nav.dashboard': 'Dasbor',
@@ -28,6 +27,7 @@ const DICT = {
     'common.all': 'Semua',
     'common.today': 'Hari Ini',
     'common.optional': 'opsional',
+    'common.uncategorized': 'Tanpa kategori',
 
     'topbar.addTransaction': 'Tambah Transaksi',
 
@@ -116,6 +116,10 @@ const DICT = {
     'tx.viewAll': 'Lihat semua riwayat',
     'tx.menu': 'Menu transaksi',
     'tx.uncategorized': 'Tanpa kategori',
+    'tx.defaultSavings': 'Nabung untuk {name} (disimpan di {target})',
+    'tx.defaultTopup': 'Isi saldo',
+    'tx.defaultTransferOut': 'Transfer ke {name}',
+    'tx.defaultTransferIn': 'Transfer dari {name}',
 
     'addTx.titleAdd': 'Tambah Transaksi',
     'addTx.titleEdit': 'Ubah Transaksi',
@@ -197,6 +201,31 @@ const DICT = {
     'about.version': 'Versi',
     'about.storageTitle': 'Privasi & Data',
     'about.storageDesc': 'Semua data disimpan secara lokal di perangkatmu (browser storage) — tidak dikirim ke server manapun.',
+
+    'chart.title': 'Statistik Keuangan',
+    'chart.avgDaily': 'Rata² Harian',
+    'chart.peakSpend': 'Puncak Belanja',
+    'chart.savingsRate': 'Tingkat Nabung',
+    'chart.streak': '{days} hari beruntun tanpa pengeluaran',
+    'chart.trend': 'Tren Harian',
+    'chart.income': 'Masuk',
+    'chart.expense': 'Keluar',
+    'chart.syncHint': 'Ketuk titik pada grafik untuk menyinkronkan ringkasan dengan tanggal tersebut',
+    'chart.synced': '{date}: {in} masuk · {out} keluar {extra}',
+    'chart.syncExtra': '— ketuk lagi untuk kembali ke tampilan bulan',
+    'chart.insight.empty': 'Belum ada transaksi tercatat bulan ini — yuk mulai catat pemasukan & pengeluaranmu.',
+    'chart.insight.streak': 'Mantap! {days} hari beruntun tanpa pengeluaran. Pertahankan ritme ini!',
+    'chart.insight.good': 'Kerja bagus! Kamu menabung {pct}% dari pemasukan bulan ini.',
+    'chart.insight.bad': 'Pengeluaran bulan ini melebihi pemasukan. Coba cek kategori yang paling boros di bawah.',
+    'chart.insight.neutral': 'Terus pantau arus kasmu harian supaya target keuangan makin dekat.',
+
+    'theme.appearance': 'Tampilan',
+    'theme.light': 'Terang',
+    'theme.dark': 'Gelap',
+    'theme.system': 'Ikuti Perangkat',
+
+    'select.placeholder': 'Pilih',
+    'select.empty': 'Tidak ada pilihan.',
   },
   en: {
     'nav.dashboard': 'Dashboard',
@@ -219,6 +248,7 @@ const DICT = {
     'common.all': 'All',
     'common.today': 'Today',
     'common.optional': 'optional',
+    'common.uncategorized': 'Uncategorized',
 
     'topbar.addTransaction': 'Add Transaction',
 
@@ -307,6 +337,10 @@ const DICT = {
     'tx.viewAll': 'View all history',
     'tx.menu': 'Transaction menu',
     'tx.uncategorized': 'Uncategorized',
+    'tx.defaultSavings': 'Savings for {name} (stored in {target})',
+    'tx.defaultTopup': 'Top up balance',
+    'tx.defaultTransferOut': 'Transfer to {name}',
+    'tx.defaultTransferIn': 'Transfer from {name}',
 
     'addTx.titleAdd': 'Add Transaction',
     'addTx.titleEdit': 'Edit Transaction',
@@ -388,6 +422,31 @@ const DICT = {
     'about.version': 'Version',
     'about.storageTitle': 'Privacy & Data',
     'about.storageDesc': 'All data is stored locally on your device (browser storage) — nothing is sent to any server.',
+
+    'chart.title': 'Financial Statistics',
+    'chart.avgDaily': 'Daily Avg',
+    'chart.peakSpend': 'Peak Spend',
+    'chart.savingsRate': 'Savings Rate',
+    'chart.streak': '{days} days no-spend streak',
+    'chart.trend': 'Daily Trend',
+    'chart.income': 'In',
+    'chart.expense': 'Out',
+    'chart.syncHint': 'Tap a point on the chart to sync the summary with that date',
+    'chart.synced': '{date}: {in} in · {out} out {extra}',
+    'chart.syncExtra': '— tap again to return to month view',
+    'chart.insight.empty': 'No transactions recorded this month — let\'s start tracking your income & expenses.',
+    'chart.insight.streak': 'Awesome! {days} day no-spend streak. Keep it up!',
+    'chart.insight.good': 'Great job! You saved {pct}% of your income this month.',
+    'chart.insight.bad': 'Expenses exceeded income this month. Check your top spending categories below.',
+    'chart.insight.neutral': 'Keep monitoring your daily cash flow to reach your financial goals.',
+
+    'theme.appearance': 'Appearance',
+    'theme.light': 'Light',
+    'theme.dark': 'Dark',
+    'theme.system': 'System',
+
+    'select.placeholder': 'Select',
+    'select.empty': 'No options available.',
   },
 } as const;
 
