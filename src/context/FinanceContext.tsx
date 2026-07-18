@@ -36,7 +36,7 @@ interface FinanceContextValue extends FinanceState {
   liveRates: LiveRatesState;
 }
 
-const STORAGE_KEY = 'wayfare-finance-state-v1';
+const STORAGE_KEY = 'cakumu-finance-data-v1';
 
 // PERBAIKAN: Mengubah nilai bawaan wallets dan transactions menjadi array kosong []
 function loadInitial(): FinanceState {
