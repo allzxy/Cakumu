@@ -3,6 +3,7 @@ import type { Category, Transaction, Wallet } from '../lib/types';
 import { CURRENCIES, BASE_CURRENCY_CODE, convertAmount } from '../lib/currencies';
 import { useLiveRates, type LiveRatesState } from '../lib/useLiveRates';
 import { useLanguage } from './LanguageContext';
+import { DEFAULT_CATEGORIES } from '../lib/seed'; // IMPORT DATA DEFAULT KATEGORI
 
 interface FinanceState {
   wallets: Wallet[];
@@ -35,7 +36,6 @@ interface FinanceContextValue extends FinanceState {
   liveRates: LiveRatesState;
 }
 
-// Kunci penyimpanan baru agar benar-benar mereset 100% data
 const STORAGE_KEY = 'cakumu-data-empty-v1';
 
 function loadInitial(): FinanceState {
@@ -46,7 +46,7 @@ function loadInitial(): FinanceState {
         const parsed = JSON.parse(raw);
         return {
           wallets: parsed.wallets ?? [],
-          categories: parsed.categories ?? [], // DIPASTIKAN KOSONG
+          categories: parsed.categories ?? DEFAULT_CATEGORIES, // GUNAKAN FALLBACK DEFAULT
           transactions: parsed.transactions ?? [],
           currencyCode: parsed.currencyCode ?? 'IDR',
           selectedMonth: parsed.selectedMonth ?? currentMonthKey(),
@@ -56,7 +56,7 @@ function loadInitial(): FinanceState {
   }
   return {
     wallets: [],
-    categories: [], // DIPASTIKAN KOSONG
+    categories: DEFAULT_CATEGORIES, // GUNAKAN FALLBACK DEFAULT
     transactions: [],
     currencyCode: 'IDR',
     selectedMonth: currentMonthKey(),
