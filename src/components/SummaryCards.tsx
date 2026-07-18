@@ -33,8 +33,7 @@ function AnimatedAmount({ value, currency }: { value: number; currency: Paramete
 export default function SummaryCards({ income, spending, balance, incomeDelta, spendingDelta, scopeLabel }: Props) {
   const { currency, toDisplay } = useFinance();
   const { t } = useLanguage();
-  const isDateScope = scopeLabel?.startsWith('tanggal') || scopeLabel?.startsWith('on day');
-  const compareLabel = isDateScope ? t('summary.vsLastMonth') : t('summary.vsLastMonth');
+  const compareLabel = t('summary.vsLastMonth');
   const finalScopeLabel = scopeLabel ?? t('summary.scopeMonth');
 
   const cards = [
