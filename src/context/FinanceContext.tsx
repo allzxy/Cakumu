@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Category, Transaction, Wallet } from '../lib/types';
 import { CURRENCIES, BASE_CURRENCY_CODE, convertAmount } from '../lib/currencies';
-import { DEFAULT_CATEGORIES, DEFAULT_TRANSACTIONS, DEFAULT_WALLETS } from '../lib/seed';
+import { DEFAULT_CATEGORIES } from '../lib/seed';
 import { useLiveRates, type LiveRatesState } from '../lib/useLiveRates';
 import { useLanguage } from './LanguageContext';
 
@@ -38,6 +38,7 @@ interface FinanceContextValue extends FinanceState {
 
 const STORAGE_KEY = 'wayfare-finance-state-v1';
 
+// PERBAIKAN: Mengubah nilai bawaan wallets dan transactions menjadi array kosong []
 function loadInitial(): FinanceState {
   if (typeof window !== 'undefined') {
     try {
@@ -45,9 +46,9 @@ function loadInitial(): FinanceState {
       if (raw) {
         const parsed = JSON.parse(raw);
         return {
-          wallets: parsed.wallets ?? DEFAULT_WALLETS,
+          wallets: parsed.wallets ?? [],
           categories: parsed.categories ?? DEFAULT_CATEGORIES,
-          transactions: parsed.transactions ?? DEFAULT_TRANSACTIONS,
+          transactions: parsed.transactions ?? [],
           currencyCode: parsed.currencyCode ?? 'IDR',
           selectedMonth: parsed.selectedMonth ?? currentMonthKey(),
         };
@@ -55,9 +56,9 @@ function loadInitial(): FinanceState {
     } catch {}
   }
   return {
-    wallets: DEFAULT_WALLETS,
-    categories: DEFAULT_CATEGORIES,
-    transactions: DEFAULT_TRANSACTIONS,
+    wallets: [],
+    categories: DEFAULT_CATEGORIES, // Kategori bawaan tetap ada agar user tidak bingung
+    transactions: [],
     currencyCode: 'IDR',
     selectedMonth: currentMonthKey(),
   };
