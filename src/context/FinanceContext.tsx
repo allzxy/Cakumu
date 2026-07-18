@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Category, Transaction, Wallet } from '../lib/types';
 import { CURRENCIES, BASE_CURRENCY_CODE, convertAmount } from '../lib/currencies';
+import { DEFAULT_CATEGORIES, DEFAULT_TRANSACTIONS, DEFAULT_WALLETS } from '../lib/seed';
 import { useLiveRates, type LiveRatesState } from '../lib/useLiveRates';
 import { useLanguage } from './LanguageContext';
 
@@ -35,7 +36,7 @@ interface FinanceContextValue extends FinanceState {
   liveRates: LiveRatesState;
 }
 
-const STORAGE_KEY = 'cakumu-data-empty-v1';
+const STORAGE_KEY = 'wayfare-finance-state-v1';
 
 function loadInitial(): FinanceState {
   if (typeof window !== 'undefined') {
@@ -44,9 +45,9 @@ function loadInitial(): FinanceState {
       if (raw) {
         const parsed = JSON.parse(raw);
         return {
-          wallets: parsed.wallets ?? [],
-          categories: parsed.categories ?? [], 
-          transactions: parsed.transactions ?? [],
+          wallets: parsed.wallets ?? DEFAULT_WALLETS,
+          categories: parsed.categories ?? DEFAULT_CATEGORIES,
+          transactions: parsed.transactions ?? DEFAULT_TRANSACTIONS,
           currencyCode: parsed.currencyCode ?? 'IDR',
           selectedMonth: parsed.selectedMonth ?? currentMonthKey(),
         };
@@ -54,9 +55,9 @@ function loadInitial(): FinanceState {
     } catch {}
   }
   return {
-    wallets: [],
-    categories: [], 
-    transactions: [],
+    wallets: DEFAULT_WALLETS,
+    categories: DEFAULT_CATEGORIES,
+    transactions: DEFAULT_TRANSACTIONS,
     currencyCode: 'IDR',
     selectedMonth: currentMonthKey(),
   };
