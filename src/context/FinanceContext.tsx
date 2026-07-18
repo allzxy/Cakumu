@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Category, Transaction, Wallet } from '../lib/types';
 import { CURRENCIES, BASE_CURRENCY_CODE, convertAmount } from '../lib/currencies';
-import { DEFAULT_CATEGORIES } from '../lib/seed';
 import { useLiveRates, type LiveRatesState } from '../lib/useLiveRates';
 import { useLanguage } from './LanguageContext';
 
@@ -36,9 +35,9 @@ interface FinanceContextValue extends FinanceState {
   liveRates: LiveRatesState;
 }
 
-const STORAGE_KEY = 'cakumu-finance-data-v1';
+// Kunci penyimpanan baru agar benar-benar mereset 100% data
+const STORAGE_KEY = 'cakumu-data-empty-v1';
 
-// PERBAIKAN: Mengubah nilai bawaan wallets dan transactions menjadi array kosong []
 function loadInitial(): FinanceState {
   if (typeof window !== 'undefined') {
     try {
@@ -47,7 +46,7 @@ function loadInitial(): FinanceState {
         const parsed = JSON.parse(raw);
         return {
           wallets: parsed.wallets ?? [],
-          categories: parsed.categories ?? DEFAULT_CATEGORIES,
+          categories: parsed.categories ?? [], // DIPASTIKAN KOSONG
           transactions: parsed.transactions ?? [],
           currencyCode: parsed.currencyCode ?? 'IDR',
           selectedMonth: parsed.selectedMonth ?? currentMonthKey(),
@@ -57,7 +56,7 @@ function loadInitial(): FinanceState {
   }
   return {
     wallets: [],
-    categories: DEFAULT_CATEGORIES, // Kategori bawaan tetap ada agar user tidak bingung
+    categories: [], // DIPASTIKAN KOSONG
     transactions: [],
     currencyCode: 'IDR',
     selectedMonth: currentMonthKey(),
