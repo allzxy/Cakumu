@@ -170,6 +170,7 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-[var(--color-ink-soft)]">{t('addTx.wallet')}</label>
             <select required value={walletId} onChange={(e) => setWalletId(e.target.value)} className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm text-[var(--color-ink)] transition focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20">
+              {wallets.length === 0 && <option value="" disabled>Belum ada dompet</option>}
               {wallets.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
           </div>
