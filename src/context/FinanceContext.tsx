@@ -3,7 +3,7 @@ import type { Category, Transaction, Wallet } from '../lib/types';
 import { CURRENCIES, BASE_CURRENCY_CODE, convertAmount } from '../lib/currencies';
 import { useLiveRates, type LiveRatesState } from '../lib/useLiveRates';
 import { useLanguage } from './LanguageContext';
-import { DEFAULT_CATEGORIES } from '../lib/seed'; // IMPORT DATA DEFAULT KATEGORI
+import { DEFAULT_CATEGORIES } from '../lib/seed';
 
 interface FinanceState {
   wallets: Wallet[];
@@ -39,6 +39,8 @@ interface FinanceContextValue extends FinanceState {
 const STORAGE_KEY = 'cakumu-data-empty-v1';
 
 function loadInitial(): FinanceState {
+  const initialCategories = DEFAULT_CATEGORIES.filter((c) => c.system);
+
   if (typeof window !== 'undefined') {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -46,7 +48,7 @@ function loadInitial(): FinanceState {
         const parsed = JSON.parse(raw);
         return {
           wallets: parsed.wallets ?? [],
-          categories: parsed.categories ?? DEFAULT_CATEGORIES, // GUNAKAN FALLBACK DEFAULT
+          categories: parsed.categories ?? initialCategories,
           transactions: parsed.transactions ?? [],
           currencyCode: parsed.currencyCode ?? 'IDR',
           selectedMonth: parsed.selectedMonth ?? currentMonthKey(),
@@ -56,7 +58,7 @@ function loadInitial(): FinanceState {
   }
   return {
     wallets: [],
-    categories: DEFAULT_CATEGORIES, // GUNAKAN FALLBACK DEFAULT
+    categories: initialCategories,
     transactions: [],
     currencyCode: 'IDR',
     selectedMonth: currentMonthKey(),
