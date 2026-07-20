@@ -80,6 +80,13 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
     onClose();
   };
 
+  // FUNGSI PEMBERSIH INPUT TRANSAKSI
+  const handleAmountChange = (val: string) => {
+    let s = val.replace(/,/g, '.').replace(/[^\d.]/g, '');
+    const p = s.split('.');
+    setAmount(p.length > 2 ? p[0] + '.' + p.slice(1).join('') : s);
+  };
+
   return (
     <Modal open={open} onClose={onClose} title={isEditing ? t('addTx.titleEdit') : t('addTx.titleAdd')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -119,11 +126,10 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
         <div>
           <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('addTx.amount')} ({currency.symbol})</label>
           <input
-            type="number"
-            min="0"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="0.00"
             required
             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]"

@@ -74,6 +74,13 @@ export default function WalletFormModal({ open, onClose, editing }: Props) {
     onClose();
   };
 
+  // FUNGSI PEMBERSIH INPUT (Bisa dipakai berulang kali oleh form saldo dan target)
+  const handleNumberChange = (val: string, setter: (v: string) => void) => {
+    let s = val.replace(/,/g, '.').replace(/[^\d.]/g, '');
+    const p = s.split('.');
+    setter(p.length > 2 ? p[0] + '.' + p.slice(1).join('') : s);
+  };
+
   return (
     <Modal open={open} onClose={onClose} title={isEditing ? t('wallets.edit') : t('wallets.new')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -89,7 +96,15 @@ export default function WalletFormModal({ open, onClose, editing }: Props) {
             <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">
               {type === 'savings' ? t('wallets.collected') : t('wallets.startingBalance')} ({currency.symbol})
             </label>
-            <input type="number" step="0.01" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0.00" disabled={isEditing || type === 'savings'} className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)] disabled:opacity-50" />
+            <input 
+              type="text" 
+              inputMode="decimal"
+              value={balance} 
+              onChange={(e) => handleNumberChange(e.target.value, setBalance)} 
+              placeholder="0.00" 
+              disabled={isEditing || type === 'savings'} 
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)] disabled:opacity-50" 
+            />
             {isEditing ? (
               <p className="mt-1 text-[11px] text-[var(--color-muted)]">{t('wallets.editHint')}</p>
             ) : type === 'savings' ? (
@@ -99,7 +114,14 @@ export default function WalletFormModal({ open, onClose, editing }: Props) {
           {type === 'savings' && (
             <div>
               <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('wallets.targetAmount')} ({currency.symbol})</label>
-              <input type="number" step="0.01" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="0.00" className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]" />
+              <input 
+                type="text" 
+                inputMode="decimal"
+                value={goal} 
+                onChange={(e) => handleNumberChange(e.target.value, setGoal)} 
+                placeholder="0.00" 
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]" 
+              />
             </div>
           )}
           {type === 'bank' && (
