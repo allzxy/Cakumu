@@ -33,8 +33,12 @@ export default function WalletFundModal({ open, onClose, wallet }: Props) {
     setNote('');
     setDate(new Date().toISOString().slice(0, 10));
     setSource('external');
-    setTargetWalletId(wallet?.linkedWalletId ?? realWallets[0]?.id ?? '');
-  }, [open, wallet?.id, realWallets]);
+    
+    const defaultTarget = wallet?.linkedWalletId ?? wallets.find(w => w.type !== 'savings' && w.id !== wallet?.id)?.id ?? '';
+    setTargetWalletId(defaultTarget);
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, wallet?.id]); 
 
   if (!wallet) return null;
 
@@ -53,6 +57,13 @@ export default function WalletFundModal({ open, onClose, wallet }: Props) {
       transferBetweenWallets(source, wallet.id, baseAmount, date, note.trim() || undefined);
     }
     onClose();
+  };
+
+  // FUNGSI PEMBERSIH INPUT (Ubah koma jadi titik, hapus huruf/minus)
+  const handleAmountChange = (val: string) => {
+    let s = val.replace(/,/g, '.').replace(/[^\d.]/g, '');
+    const p = s.split('.');
+    setAmount(p.length > 2 ? p[0] + '.' + p.slice(1).join('') : s);
   };
 
   const sourceOptions = [
@@ -111,7 +122,16 @@ export default function WalletFundModal({ open, onClose, wallet }: Props) {
 
         <div>
           <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('walletFund.amount')} ({currency.symbol})</label>
-          <input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required autoFocus className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]" />
+          <input 
+            type="text" 
+            inputMode="decimal"
+            value={amount} 
+            onChange={(e) => handleAmountChange(e.target.value)}
+            placeholder="0.00" 
+            required 
+            autoFocus 
+            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]" 
+          />
         </div>
 
         <DateField value={date} onChange={setDate} nested />
