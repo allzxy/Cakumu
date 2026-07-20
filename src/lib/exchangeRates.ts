@@ -1,18 +1,18 @@
-// Fetches real-world exchange rates from the free, keyless Frankfurter API
-// (backed by the European Central Bank reference rates, updated on banking days).
-// Falls back to static reference rates if the network request fails, so the
-// app keeps working offline.
+// Fetches exchange rates from Mid-Market providers (similar to Google).
+// Uses a primary API with a CDN-based fallback so the app is extremely robust
+// and keeps working even if one service goes down.
 
 import { EXCHANGE_RATES, BASE_CURRENCY_CODE } from './currencies';
 
-const CACHE_KEY = 'wayfare-exchange-rates-v1';
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+// Kita ubah nama cache agar sistem otomatis mereset data lama pengguna
+const CACHE_KEY = 'cakumu-exchange-rates-v2';
+const CACHE_TTL_MS = 60 * 60 * 1000; // Cek pembaruan setiap 1 jam
 
 export interface RatesSnapshot {
   base: string;
   rates: Record<string, number>;
-  fetchedAt: string; // ISO timestamp of when we fetched it
-  sourceDate: string | null; // date the rates were published (from API)
+  fetchedAt: string; // Kapan aplikasi kita menarik data ini
+  sourceDate: string | null; // Kapan penyedia data merilis kurs ini
   isLive: boolean;
 }
 
@@ -42,7 +42,7 @@ function saveCache(snapshot: RatesSnapshot) {
   try {
     window.localStorage.setItem(CACHE_KEY, JSON.stringify(snapshot));
   } catch {
-    // ignore quota errors
+    // Abaikan jika browser penuh (incognito/private mode)
   }
 }
 
@@ -52,28 +52,65 @@ export function isCacheFresh(snapshot: RatesSnapshot | null): boolean {
   return age < CACHE_TTL_MS;
 }
 
-/** Returns cached rates immediately (static fallback if nothing cached yet). */
+/** Mengembalikan kurs cache secara instan (atau fallback statis jika belum ada). */
 export function getInitialRates(): RatesSnapshot {
   return loadCached() ?? staticSnapshot();
 }
 
-/** Fetches fresh live rates from the network. Throws on failure. */
+/** 
+ * Menarik kurs terbaru dari internet.
+ * Menggunakan teknik fallback: Coba API 1, jika gagal otomatis ke API 2.
+ */
 export async function fetchLiveRates(): Promise<RatesSnapshot> {
-  const symbols = Object.keys(EXCHANGE_RATES).filter((c) => c !== BASE_CURRENCY_CODE);
-  const url = `https://api.frankfurter.dev/v1/latest?from=${BASE_CURRENCY_CODE}&to=${symbols.join(',')}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Gagal memuat kurs (status ${res.status})`);
-  const data = await res.json();
-  if (!data?.rates) throw new Error('Format data kurs tidak dikenali.');
+  try {
+    // API UTAMA: Open ExchangeRate-API (Akurat, Mid-Market Rate mirip Google)
+    const res = await fetch(`https://open.er-api.com/v6/latest/${BASE_CURRENCY_CODE}`);
+    if (!res.ok) throw new Error('API Utama Gagal');
+    
+    const data = await res.json();
+    if (data.result !== 'success' || !data.rates) throw new Error('Format data API utama tidak dikenali');
 
-  const rates: Record<string, number> = { [BASE_CURRENCY_CODE]: 1, ...data.rates };
-  const snapshot: RatesSnapshot = {
-    base: BASE_CURRENCY_CODE,
-    rates,
-    fetchedAt: new Date().toISOString(),
-    sourceDate: data.date ?? null,
-    isLive: true,
-  };
-  saveCache(snapshot);
-  return snapshot;
+    const snapshot: RatesSnapshot = {
+      base: BASE_CURRENCY_CODE,
+      rates: data.rates,
+      fetchedAt: new Date().toISOString(),
+      sourceDate: data.time_last_update_utc ?? null,
+      isLive: true,
+    };
+    saveCache(snapshot);
+    return snapshot;
+
+  } catch (errPrimary) {
+    
+    // API CADANGAN: Fawaz Ahmed Currency API (Update stabil via jsDelivr CDN)
+    try {
+      const fallbackRes = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${BASE_CURRENCY_CODE.toLowerCase()}.json`);
+      if (!fallbackRes.ok) throw new Error('API Cadangan Gagal');
+      
+      const fallbackData = await fallbackRes.json();
+      const ratesKey = BASE_CURRENCY_CODE.toLowerCase();
+      
+      if (!fallbackData[ratesKey]) throw new Error('Format data API cadangan tidak dikenali');
+
+      // API cadangan ini menggunakan huruf kecil (idr, eur), kita ubah ke huruf kapital (IDR, EUR)
+      const rawRates = fallbackData[ratesKey];
+      const upperRates: Record<string, number> = {};
+      for (const key in rawRates) {
+        upperRates[key.toUpperCase()] = rawRates[key];
+      }
+
+      const snapshot: RatesSnapshot = {
+        base: BASE_CURRENCY_CODE,
+        rates: upperRates,
+        fetchedAt: new Date().toISOString(),
+        sourceDate: fallbackData.date ?? null,
+        isLive: true,
+      };
+      saveCache(snapshot);
+      return snapshot;
+
+    } catch (errFallback) {
+      throw new Error('Semua layanan penyedia kurs sedang tidak dapat diakses saat ini. Menggunakan kurs referensi offline.');
+    }
+  }
 }

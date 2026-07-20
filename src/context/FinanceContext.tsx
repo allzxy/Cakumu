@@ -134,18 +134,28 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       const old = s.transactions.find((tr) => tr.id === id);
       if (!old) return s;
 
-      let wallets = s.wallets.map((w) =>
-        w.id === old.walletId
-          ? { ...w, balance: w.balance - (old.type === 'income' ? old.amount : -old.amount) }
-          : w
-      );
-      wallets = wallets.map((w) =>
-        w.id === patch.walletId
-          ? { ...w, balance: w.balance + (patch.type === 'income' ? patch.amount : -patch.amount) }
-          : w
-      );
+      let wallets = s.wallets.map((w) => {
+        let bal = w.balance;
+        // 1. Kembalikan efek transaksi lama (termasuk di dompet tabungan jika ada)
+        if (w.id === old.walletId) {
+          bal -= (old.type === 'income' ? old.amount : -old.amount);
+        }
+        if (old.linkedWalletId && w.id === old.linkedWalletId) {
+          bal -= (old.type === 'income' ? old.amount : -old.amount);
+        }
 
-      const transactions = s.transactions.map((tr) => (tr.id === id ? { ...patch, id } : tr));
+        // 2. Terapkan efek transaksi baru (termasuk di dompet tabungan jika ada)
+        if (w.id === patch.walletId) {
+          bal += (patch.type === 'income' ? patch.amount : -patch.amount);
+        }
+        if (old.linkedWalletId && w.id === old.linkedWalletId) {
+          bal += (patch.type === 'income' ? patch.amount : -patch.amount);
+        }
+
+        return { ...w, balance: bal };
+      });
+
+      const transactions = s.transactions.map((tr) => (tr.id === id ? { ...old, ...patch, id } : tr));
       return { ...s, transactions, wallets };
     });
   }, []);
@@ -154,11 +164,20 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setState((s) => {
       const tx = s.transactions.find((tr) => tr.id === id);
       if (!tx) return s;
-      const wallets = s.wallets.map((w) =>
-        w.id === tx.walletId
-          ? { ...w, balance: w.balance - (tx.type === 'income' ? tx.amount : -tx.amount) }
-          : w
-      );
+      
+      const wallets = s.wallets.map((w) => {
+        let bal = w.balance;
+        // Kurangi saldo di dompet nyata
+        if (w.id === tx.walletId) {
+          bal -= (tx.type === 'income' ? tx.amount : -tx.amount);
+        }
+        // Kurangi juga saldo progres tabungannya
+        if (tx.linkedWalletId && w.id === tx.linkedWalletId) {
+          bal -= (tx.type === 'income' ? tx.amount : -tx.amount);
+        }
+        return { ...w, balance: bal };
+      });
+
       return { ...s, transactions: s.transactions.filter((tr) => tr.id !== id), wallets };
     });
   }, []);
@@ -169,7 +188,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         const delta = s.transactions
           .filter((tr) => tr.walletId === w.id)
           .reduce((sum, tr) => sum + (tr.type === 'income' ? tr.amount : -tr.amount), 0);
-        return { ...w, balance: w.balance - delta };
+        
+        // Kosongkan juga efek tabungan dari dompet target
+        const deltaLinked = s.transactions
+          .filter((tr) => tr.linkedWalletId === w.id)
+          .reduce((sum, tr) => sum + (tr.type === 'income' ? tr.amount : -tr.amount), 0);
+
+        return { ...w, balance: w.balance - delta - deltaLinked };
       });
       return { ...s, transactions: [], wallets };
     });
@@ -266,6 +291,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           walletId: targetWalletId,
           type: 'income',
           amount,
+          linkedWalletId: savingsWalletId, // <-- Ikatan riwayat transaksi dengan dompet target
         };
 
         const wallets = s.wallets.map((w) => {

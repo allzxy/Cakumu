@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Wallet, Tag, History, Settings, Leaf, X } from 'lucide-react';
+import { LayoutGrid, Wallet, Tag, History, Settings, Leaf, X, PiggyBank } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function NavDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -8,6 +8,7 @@ export default function NavDrawer({ open, onClose }: { open: boolean; onClose: (
   const NAV_ITEMS = [
     { to: '/', label: t('nav.dashboard'), icon: LayoutGrid, end: true },
     { to: '/wallets', label: t('nav.wallets'), icon: Wallet, end: false },
+    { to: '/savings', label: t('nav.savings'), icon: PiggyBank, end: false },
     { to: '/categories', label: t('nav.categories'), icon: Tag, end: false },
     { to: '/history', label: t('nav.history'), icon: History, end: false },
     { to: '/settings', label: t('nav.settings'), icon: Settings, end: false },

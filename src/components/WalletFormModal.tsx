@@ -13,22 +13,29 @@ interface Props {
   open: boolean;
   onClose: () => void;
   editing?: Wallet | null;
+  mode?: 'wallets' | 'savings' | 'all';
 }
 
-export default function WalletFormModal({ open, onClose, editing }: Props) {
+export default function WalletFormModal({ open, onClose, editing, mode = 'all' }: Props) {
   const { wallets, currency, addWallet, updateWallet, toDisplay, fromDisplay } = useFinance();
   const { t } = useLanguage();
   const isEditing = !!editing;
 
-  const TYPE_OPTIONS = useMemo(() => [
-    { value: 'cash' as WalletType, label: t('wallets.type.cash'), icon: WalletIcon },
-    { value: 'bank' as WalletType, label: t('wallets.type.bank'), icon: CreditCard },
-    { value: 'savings' as WalletType, label: t('wallets.type.savings'), icon: PiggyBank },
-    { value: 'digital' as WalletType, label: t('wallets.type.digital'), icon: Smartphone },
-  ], [t]);
+  // Render opsi berdasarkan halaman ('wallets' menyembunyikan tabungan, 'savings' hanya tabungan)
+  const TYPE_OPTIONS = useMemo(() => {
+    const options = [
+      { value: 'cash' as WalletType, label: t('wallets.type.cash'), icon: WalletIcon },
+      { value: 'bank' as WalletType, label: t('wallets.type.bank'), icon: CreditCard },
+      { value: 'savings' as WalletType, label: t('wallets.type.savings'), icon: PiggyBank },
+      { value: 'digital' as WalletType, label: t('wallets.type.digital'), icon: Smartphone },
+    ];
+    if (mode === 'wallets') return options.filter(o => o.value !== 'savings');
+    if (mode === 'savings') return options.filter(o => o.value === 'savings');
+    return options;
+  }, [t, mode]);
 
   const [name, setName] = useState('');
-  const [type, setType] = useState<WalletType>('cash');
+  const [type, setType] = useState<WalletType>(mode === 'savings' ? 'savings' : 'cash');
   const [balance, setBalance] = useState('');
   const [goal, setGoal] = useState('');
   const [institution, setInstitution] = useState('');
@@ -43,12 +50,12 @@ export default function WalletFormModal({ open, onClose, editing }: Props) {
       setInstitution(editing.institution ?? '');
     } else {
       setName('');
-      setType('cash');
+      setType(mode === 'savings' ? 'savings' : 'cash');
       setBalance('');
       setGoal('');
       setInstitution('');
     }
-  }, [open, editing, toDisplay]);
+  }, [open, editing, mode, toDisplay]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +81,6 @@ export default function WalletFormModal({ open, onClose, editing }: Props) {
     onClose();
   };
 
-  // FUNGSI PEMBERSIH INPUT (Bisa dipakai berulang kali oleh form saldo dan target)
   const handleNumberChange = (val: string, setter: (v: string) => void) => {
     let s = val.replace(/,/g, '.').replace(/[^\d.]/g, '');
     const p = s.split('.');
@@ -82,14 +88,15 @@ export default function WalletFormModal({ open, onClose, editing }: Props) {
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={isEditing ? t('wallets.edit') : t('wallets.new')}>
+    <Modal open={open} onClose={onClose} title={isEditing ? t('wallets.edit') : mode === 'savings' ? t('savings.new') : t('wallets.new')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="mb-1 block text-xs font-medium text-[var(--color-muted)]">{t('wallets.name')}</label>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('wallets.namePlaceholder')} required className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] outline-none transition focus:border-[var(--color-primary)]" />
         </div>
 
-        <SelectField label={t('wallets.type')} modalTitle={t('wallets.type')} nested value={type} onChange={(v) => setType(v as WalletType)} options={TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label, icon: WALLET_ICONS[opt.value] }))} />
+        {/* Jika mode='savings', kolom ini otomatis terkunci ke Target Tabungan */}
+        <SelectField label={t('wallets.type')} modalTitle={t('wallets.type')} nested value={type} onChange={(v) => setType(v as WalletType)} options={TYPE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label, icon: opt.icon }))} />
 
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -133,7 +140,7 @@ export default function WalletFormModal({ open, onClose, editing }: Props) {
         </div>
 
         <button type="submit" className="mt-2 rounded-xl bg-[var(--color-primary)] py-3 text-sm font-semibold text-[var(--color-primary-contrast)] shadow-[var(--shadow-flat)] transition hover:bg-[var(--color-primary-strong)]">
-          {isEditing ? t('common.saveChanges') : t('wallets.create')}
+          {isEditing ? t('common.saveChanges') : mode === 'savings' ? t('savings.new') : t('wallets.create')}
         </button>
       </form>
     </Modal>

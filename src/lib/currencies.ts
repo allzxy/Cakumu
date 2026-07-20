@@ -18,21 +18,20 @@ export const CURRENCIES: CurrencyOption[] = [
 // Base currency used internally to store all wallet/transaction amounts.
 export const BASE_CURRENCY_CODE = 'USD';
 
-// Approximate reference exchange rates — units of each currency per 1 USD.
-// Static values so the app works fully offline; adjust as real-world rates move.
+// Diperbarui: Nilai tengah pasar (Mid-Market) rata-rata saat ini untuk fallback offline
 export const EXCHANGE_RATES: Record<string, number> = {
   USD: 1,
   EUR: 0.92,
-  GBP: 0.79,
-  JPY: 149.5,
-  INR: 83.3,
-  CAD: 1.36,
-  AUD: 1.52,
-  SGD: 1.34,
-  MYR: 4.47,
-  CHF: 0.88,
-  BRL: 5.05,
-  IDR: 15850,
+  GBP: 0.78,
+  JPY: 153.5,
+  INR: 83.5,
+  CAD: 1.37,
+  AUD: 1.51,
+  SGD: 1.35,
+  MYR: 4.70,
+  CHF: 0.90,
+  BRL: 5.15,
+  IDR: 16250, // Diperbarui agar lebih relevan dengan kurs pasar Google saat offline
 };
 
 const ZERO_DECIMAL_CURRENCIES = new Set(['IDR', 'JPY']);
@@ -55,14 +54,16 @@ export function convertAmount(
   return inBase * toRate;
 }
 
+// Diperbarui: Menerima parameter locale opsional agar menyesuaikan bahasa pengguna
 export function getRateLabel(
   fromCode: string,
   toCode: string,
-  rates: Record<string, number> = EXCHANGE_RATES
+  rates: Record<string, number> = EXCHANGE_RATES,
+  locale: string = 'id-ID' 
 ): string {
   const rate = convertAmount(1, fromCode, toCode, rates);
   const digits = ZERO_DECIMAL_CURRENCIES.has(toCode) ? 0 : 2;
-  return `1 ${fromCode} ≈ ${rate.toLocaleString('id-ID', { maximumFractionDigits: digits })} ${toCode}`;
+  return `1 ${fromCode} ≈ ${rate.toLocaleString(locale, { maximumFractionDigits: digits })} ${toCode}`;
 }
 
 export function formatMoney(amount: number, currency: CurrencyOption, opts?: { compact?: boolean }) {

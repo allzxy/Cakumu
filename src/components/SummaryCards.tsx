@@ -30,16 +30,15 @@ function AnimatedAmount({ value, currency }: { value: number; currency: Paramete
   return <>{formatMoney(animated, currency)}</>;
 }
 
-export default function SummaryCards({ income, spending, balance, incomeDelta, spendingDelta, scopeLabel }: Props) {
+export default function SummaryCards({ income, spending, balance, incomeDelta, spendingDelta }: Props) {
   const { currency, toDisplay } = useFinance();
   const { t } = useLanguage();
   const compareLabel = t('summary.vsLastMonth');
-  const finalScopeLabel = scopeLabel ?? t('summary.scopeMonth');
 
   const cards = [
     { label: t('summary.income'), value: toDisplay(income), icon: ArrowUpRight, accent: 'var(--color-primary)', bg: 'var(--color-primary-soft)', delta: <DeltaTag value={incomeDelta} compareLabel={compareLabel} /> },
     { label: t('summary.expense'), value: toDisplay(spending), icon: ArrowDownRight, accent: 'var(--color-warn)', bg: 'var(--color-warn-soft)', delta: <DeltaTag value={spendingDelta} invert compareLabel={compareLabel} /> },
-    { label: t('summary.balance'), value: toDisplay(balance), icon: Scale, accent: 'var(--color-accent)', bg: 'var(--color-accent-soft)', delta: <span className="text-xs text-[var(--color-muted)]">{t('summary.balanceScope', { scope: finalScopeLabel })}</span> },
+    { label: t('summary.balance'), value: toDisplay(balance), icon: Scale, accent: 'var(--color-accent)', bg: 'var(--color-accent-soft)', delta: <span className="text-xs text-[var(--color-muted)]">{t('summary.balanceScope')}</span> },
   ];
 
   return (

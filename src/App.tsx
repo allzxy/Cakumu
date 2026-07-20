@@ -6,8 +6,11 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import NavDrawer from './components/NavDrawer';
 import ThemeToggle from './components/ThemeToggle';
+
+// 1. PASTIKAN SEMUA HALAMAN DIIMPOR DI SINI (Termasuk Savings)
 import Dashboard from './pages/Dashboard';
 import Wallets from './pages/Wallets';
+import Savings from './pages/Savings'; 
 import Categories from './pages/Categories';
 import History from './pages/History';
 import Settings from './pages/Settings';
@@ -36,9 +39,11 @@ function AppShell() {
       </header>
 
       <main className="mx-auto w-full max-w-[1100px] px-4 py-5 sm:px-6 sm:py-8 lg:px-10">
+        {/* 2. DAFTARKAN RUTE (JALUR) HALAMAN DI SINI */}
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/wallets" element={<Wallets />} />
+          <Route path="/savings" element={<Savings />} /> {/* INI YANG MEMBUAT HALAMANNYA MUNCUL */}
           <Route path="/categories" element={<Categories />} />
           <Route path="/history" element={<History />} />
           <Route path="/settings" element={<Settings />} />

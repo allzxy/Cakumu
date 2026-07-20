@@ -38,6 +38,12 @@ export interface Transaction {
   walletId: string;
   type: TransactionType;
   amount: number;
+  /**
+   * Jika transaksi ini adalah hasil dari "Tambah Tabungan", field ini akan menyimpan 
+   * ID dari dompet tabungan (savings) yang ikut bertambah, agar jika transaksi dihapus/diedit,
+   * saldo di dompet tabungan juga ikut disesuaikan secara otomatis.
+   */
+  linkedWalletId?: string; 
 }
 
 export interface CurrencyOption {

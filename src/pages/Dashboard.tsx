@@ -42,12 +42,9 @@ export default function Dashboard() {
   const income = scopedTx.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
   const spending = scopedTx.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
   
-  // PERBAIKAN: Kurangi total tabungan dari total saldo dompet agar "Saldo Bersih" hanya menampilkan uang bebas.
-  const realWalletBalance = wallets.filter((w) => w.type !== 'savings').reduce((s, w) => s + w.balance, 0);
-  const savingsBalance = wallets.filter((w) => w.type === 'savings').reduce((s, w) => s + w.balance, 0);
-  const totalWalletBalance = realWalletBalance - savingsBalance;
-  
-  const balance = totalWalletBalance - spending;
+  // PERBAIKAN BUG FATAL: Saldo Bersih adalah MURNI total uang bebas di dompet saat ini.
+  // Tidak boleh dikurangi 'spending' lagi karena setiap transaksi sudah memotong saldo dompet.
+  const balance = wallets.filter((w) => w.type !== 'savings').reduce((s, w) => s + w.balance, 0);
 
   const priorIncome = priorScopeTx.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
   const priorSpending = priorScopeTx.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
