@@ -18,7 +18,11 @@ export default function Wallets() {
   const [funding, setFunding] = useState<Wallet | null>(null);
   const [deleting, setDeleting] = useState<Wallet | null>(null);
 
-  const totalBalance = toDisplay(wallets.filter((w) => w.type !== 'savings').reduce((s, w) => s + w.balance, 0));
+  // PERBAIKAN: Kurangi total saldo dompet nyata dengan total saldo tabungan
+  // agar yang tampil murni "Uang Bebas" yang bisa dipakai.
+  const realBalance = wallets.filter((w) => w.type !== 'savings').reduce((s, w) => s + w.balance, 0);
+  const savingsBalance = wallets.filter((w) => w.type === 'savings').reduce((s, w) => s + w.balance, 0);
+  const totalBalance = toDisplay(realBalance - savingsBalance);
 
   const openCreate = () => {
     setEditing(null);
