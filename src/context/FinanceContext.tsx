@@ -136,19 +136,14 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       let wallets = s.wallets.map((w) => {
         let bal = w.balance;
-        // 1. Kembalikan efek transaksi lama (termasuk di dompet tabungan jika ada)
+        
+        // 1. Kembalikan efek transaksi lama HANYA pada dompet utama
         if (w.id === old.walletId) {
           bal -= (old.type === 'income' ? old.amount : -old.amount);
         }
-        if (old.linkedWalletId && w.id === old.linkedWalletId) {
-          bal -= (old.type === 'income' ? old.amount : -old.amount);
-        }
 
-        // 2. Terapkan efek transaksi baru (termasuk di dompet tabungan jika ada)
+        // 2. Terapkan efek transaksi baru HANYA pada dompet utama
         if (w.id === patch.walletId) {
-          bal += (patch.type === 'income' ? patch.amount : -patch.amount);
-        }
-        if (old.linkedWalletId && w.id === old.linkedWalletId) {
           bal += (patch.type === 'income' ? patch.amount : -patch.amount);
         }
 
@@ -167,14 +162,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       
       const wallets = s.wallets.map((w) => {
         let bal = w.balance;
-        // Kurangi saldo di dompet nyata
+        
+        // Kurangi saldo HANYA di dompet tempat transaksi berada
         if (w.id === tx.walletId) {
           bal -= (tx.type === 'income' ? tx.amount : -tx.amount);
         }
-        // Kurangi juga saldo progres tabungannya
-        if (tx.linkedWalletId && w.id === tx.linkedWalletId) {
-          bal -= (tx.type === 'income' ? tx.amount : -tx.amount);
-        }
+        
         return { ...w, balance: bal };
       });
 
@@ -188,13 +181,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         const delta = s.transactions
           .filter((tr) => tr.walletId === w.id)
           .reduce((sum, tr) => sum + (tr.type === 'income' ? tr.amount : -tr.amount), 0);
-        
-        // Kosongkan juga efek tabungan dari dompet target
-        const deltaLinked = s.transactions
-          .filter((tr) => tr.linkedWalletId === w.id)
-          .reduce((sum, tr) => sum + (tr.type === 'income' ? tr.amount : -tr.amount), 0);
 
-        return { ...w, balance: w.balance - delta - deltaLinked };
+        return { ...w, balance: w.balance - delta };
       });
       return { ...s, transactions: [], wallets };
     });
@@ -288,15 +276,21 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           date,
           description: note?.trim() || t('tx.defaultSavings', { name: savingsWallet.name, target: targetWallet.name }),
           categoryId: category,
-          walletId: targetWalletId,
+          
+          // PERBAIKAN: Transaksi ini HANYA dicatat ke riwayat dompet tabungan
+          // agar tidak terdeteksi sebagai "Pemasukan" pada dompet nyata di dasbor.
+          walletId: savingsWalletId, 
           type: 'income',
           amount,
-          linkedWalletId: savingsWalletId, // <-- Ikatan riwayat transaksi dengan dompet target
+          
+          // Menyimpan jejak bahwa tabungan ini terikat dengan dompet nyata
+          linkedWalletId: targetWalletId, 
         };
 
         const wallets = s.wallets.map((w) => {
+          // PERBAIKAN: Saldo hanya bertambah di dompet tabungan. 
+          // Saldo dompet nyata dibiarkan (tidak ikut ditambah) agar tidak double counting.
           if (w.id === savingsWalletId) return { ...w, balance: w.balance + amount, linkedWalletId: targetWalletId };
-          if (w.id === targetWalletId) return { ...w, balance: w.balance + amount };
           return w;
         });
 

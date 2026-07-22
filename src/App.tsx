@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom'; 
 import { Menu, Leaf } from 'lucide-react';
 import { FinanceProvider } from './context/FinanceContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -60,9 +60,9 @@ export default function App() {
     <ThemeProvider>
       <LanguageProvider>
         <FinanceProvider>
-          <BrowserRouter>
+          <HashRouter> 
             <AppShell />
-          </BrowserRouter>
+          </HashRouter>
         </FinanceProvider>
       </LanguageProvider>
     </ThemeProvider>

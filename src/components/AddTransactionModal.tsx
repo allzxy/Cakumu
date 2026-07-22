@@ -16,11 +16,16 @@ interface Props {
 export default function AddTransactionModal({ open, onClose, editing }: Props) {
   const { categories, wallets, currency, addTransaction, updateTransaction, fromDisplay, toDisplay } = useFinance();
   const { t } = useLanguage();
+  
+  // PERBAIKAN 1: Filter dompet untuk menyingkirkan dompet 'savings' (tabungan)
+  const activeWallets = wallets.filter((w) => w.type !== 'savings');
+
   const [type, setType] = useState<TransactionType>('expense');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [walletId, setWalletId] = useState(wallets[0]?.id ?? '');
+  // PERBAIKAN 2: Pastikan nilai awal default mengambil dari dompet yang nyata
+  const [walletId, setWalletId] = useState(activeWallets[0]?.id ?? '');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
   const filteredCategories = categories.filter((c) => c.type === type && (!c.system || c.id === editing?.categoryId));
@@ -40,10 +45,12 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
       setDescription('');
       setAmount('');
       setCategoryId('');
-      setWalletId(wallets[0]?.id ?? '');
+      // PERBAIKAN 3: Reset juga harus diarahkan ke dompet nyata, bukan tabungan
+      setWalletId(activeWallets[0]?.id ?? '');
       setDate(new Date().toISOString().slice(0, 10));
     }
-  }, [open, editing, wallets, toDisplay]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editing, toDisplay]); // Menghapus dompet dari dependensi agar tidak memicu render berulang
 
   const reset = () => {
     setDescription('');
@@ -80,7 +87,6 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
     onClose();
   };
 
-  // FUNGSI PEMBERSIH INPUT TRANSAKSI
   const handleAmountChange = (val: string) => {
     let s = val.replace(/,/g, '.').replace(/[^\d.]/g, '');
     const p = s.split('.');
@@ -154,9 +160,10 @@ export default function AddTransactionModal({ open, onClose, editing }: Props) {
         <SelectField
           label={t('addTx.wallet')}
           modalTitle={t('addTx.wallet')}
-          value={walletId}
+          value={walletId || activeWallets[0]?.id || ''} // Fallback ke dompet nyata
           onChange={setWalletId}
-          options={wallets.map((w) => ({
+          // PERBAIKAN 4: Render opsi pilihan hanya dari dompet nyata
+          options={activeWallets.map((w) => ({
             value: w.id,
             label: w.name,
             icon: WALLET_ICONS[w.type],

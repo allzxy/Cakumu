@@ -39,15 +39,26 @@ export default function Dashboard() {
     return transactions.filter((tx) => tx.date.slice(0, 7) === prevMonthKey(selectedMonth));
   }, [transactions, selectedMonth, selectedDate]);
 
-  const income = scopedTx.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
-  const spending = scopedTx.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
+  // PERBAIKAN 1: Filter Pemasukan Murni
+  // Hanya menjumlahkan type 'income' yang TIDAK memiliki linkedWalletId (bukan tabungan/transfer)
+  const income = scopedTx
+    .filter((tx) => tx.type === 'income' && !tx.linkedWalletId)
+    .reduce((s, tx) => s + tx.amount, 0);
   
-  // PERBAIKAN BUG FATAL: Saldo Bersih adalah MURNI total uang bebas di dompet saat ini.
-  // Tidak boleh dikurangi 'spending' lagi karena setiap transaksi sudah memotong saldo dompet.
+  // PERBAIKAN 2: Filter Pengeluaran Murni
+  const spending = scopedTx
+    .filter((tx) => tx.type === 'expense' && !tx.linkedWalletId)
+    .reduce((s, tx) => s + tx.amount, 0);
+  
   const balance = wallets.filter((w) => w.type !== 'savings').reduce((s, w) => s + w.balance, 0);
 
-  const priorIncome = priorScopeTx.filter((tx) => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0);
-  const priorSpending = priorScopeTx.filter((tx) => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0);
+  const priorIncome = priorScopeTx
+    .filter((tx) => tx.type === 'income' && !tx.linkedWalletId)
+    .reduce((s, tx) => s + tx.amount, 0);
+    
+  const priorSpending = priorScopeTx
+    .filter((tx) => tx.type === 'expense' && !tx.linkedWalletId)
+    .reduce((s, tx) => s + tx.amount, 0);
 
   const handleMonthChange = (month: string) => { setSelectedMonth(month); setSelectedDate(null); };
 
@@ -62,12 +73,27 @@ export default function Dashboard() {
           </button>
         )}
       </div>
-      <SummaryCards income={income} spending={spending} balance={balance} incomeDelta={pctDelta(income, priorIncome)} spendingDelta={pctDelta(spending, priorSpending)} scopeLabel={selectedDate ? t('summary.scopeDate', { day: selectedDate.slice(8, 10) }) : t('summary.scopeMonth')} />
+      
+      {/* SummaryCards kini hanya menerima angka murni (tanpa distorsi dari uang tabungan) */}
+      <SummaryCards 
+        income={income} 
+        spending={spending} 
+        balance={balance} 
+        incomeDelta={pctDelta(income, priorIncome)} 
+        spendingDelta={pctDelta(spending, priorSpending)} 
+        scopeLabel={selectedDate ? t('summary.scopeDate', { day: selectedDate.slice(8, 10) }) : t('summary.scopeMonth')} 
+      />
+      
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <div className="xl:col-span-3"><DailyChart transactions={monthTx} month={selectedMonth} selectedDate={selectedDate} onSelectDate={setSelectedDate} /></div>
         <div className="xl:col-span-2"><CategoryBreakdown transactions={scopedTx} categories={categories} onManage={() => navigate('/categories')} /></div>
       </div>
+      
+      {/* PERBAIKAN 3: TransactionList tetap menerima scopedTx secara keseluruhan.
+          Dengan ini, semua jenis riwayat (Pemasukan, Pengeluaran, dan Tabungan) 
+          akan muncul sebagai "Riwayat Terbaru" berdasarkan urutan waktu. */}
       <TransactionList transactions={scopedTx} preview />
+      
       <AddTransactionModal open={showAdd} onClose={() => setShowAdd(false)} />
     </div>
   );
