@@ -42,7 +42,7 @@ const DICT = {
     'summary.balance': 'Saldo Bersih',
     'summary.vsLastMonth': 'vs bulan lalu',
     'summary.noPriorData': 'belum ada data {compare}',
-    'summary.balanceScope': 'current available balance',
+    'summary.balanceScope': 'saldo yang tersedia saat ini',
     'summary.scopeMonth': 'bulan ini',
     'summary.scopeDate': 'tanggal {day}',
 
